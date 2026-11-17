@@ -20,14 +20,17 @@ document.body.appendChild(renderer.domElement)
 
 const control = new OrbitControls(camera, renderer.domElement)
 
+// Lighting
 scene.add(new THREE.AmbientLight(0xffffff, 0.5))
 
 const dir = new THREE.DirectionalLight(0xffffff, 2.5)
 dir.position.set(4, 6, 5)
 scene.add(dir)
 
+// Grid
 scene.add(new THREE.GridHelper(20, 20))
 
+// Objects
 const pickables = []
 
 const colors = [
@@ -37,6 +40,7 @@ const colors = [
     0x9B59B6
 ]
 
+// TODO 1: Different geometries
 for (let i = 0; i < 4; i++) {
 
     let geometry
@@ -64,6 +68,7 @@ for (let i = 0; i < 4; i++) {
     pickables.push(mesh)
 }
 
+// TODO 2: Save original positions AND scales
 const initialPositions = pickables.map(obj =>
     obj.position.clone()
 )
@@ -72,6 +77,7 @@ const initialScales = pickables.map(obj =>
     obj.scale.clone()
 )
 
+// Pointer
 const pointer = new THREE.Vector2()
 
 function updatePointer(event) {
@@ -101,12 +107,14 @@ renderer.domElement.addEventListener('pointerdown', (event) => {
 
     const hits = rayCaster.intersectObjects(pickables)
 
+    // Remove previous highlight
     if (selected) {
         selected.material.emissive.setHex(0x000000)
     }
 
     selected = hits.length > 0 ? hits[0].object : null
 
+    // Highlight selected object
     if (selected) {
 
         selected.material.emissive.setHex(0x882200)
@@ -116,6 +124,7 @@ renderer.domElement.addEventListener('pointerdown', (event) => {
     }
 })
 
+// Plane for dragging objects
 const plane = new THREE.Plane(
     new THREE.Vector3(0, 1, 0),
     0
@@ -123,6 +132,7 @@ const plane = new THREE.Plane(
 
 const intersect = new THREE.Vector3()
 
+// TODO 3: Limit object movement inside the grid
 renderer.domElement.addEventListener('pointermove', (event) => {
 
     if (!dragging || !selected) {
@@ -135,6 +145,7 @@ renderer.domElement.addEventListener('pointermove', (event) => {
 
     if (rayCaster.ray.intersectPlane(plane, intersect)) {
 
+        // Grid boundaries: -10 to 10
         const gridLimit = 10
 
         selected.position.x = THREE.MathUtils.clamp(
@@ -157,6 +168,7 @@ renderer.domElement.addEventListener('pointerup', () => {
     control.enabled = true
 })
 
+// Reset button
 const gui = new GUI()
 
 gui.add({
@@ -164,13 +176,16 @@ gui.add({
 
         for (let i = 0; i < pickables.length; i++) {
 
+            // Restore original position
             pickables[i].position.copy(initialPositions[i])
 
+            // Restore original scale
             pickables[i].scale.copy(initialScales[i])
         }
     }
 }, 'reset').name('Reset Positions & Scales')
 
+// Animation
 function animate() {
 
     requestAnimationFrame(animate)
@@ -182,6 +197,7 @@ function animate() {
 
 animate()
 
+// Handle window resizing
 window.addEventListener('resize', () => {
 
     camera.aspect = innerWidth / innerHeight
